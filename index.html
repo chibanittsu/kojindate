@@ -257,8 +257,8 @@ function addDep() {
       <button class="btn-remove" onclick="removeDep(${idx})" aria-label="削除">×</button>
     </div>
     <div class="row cols2">
-      <div class="field"><label>フリガナ</label><input type="text" id="d${idx}_kana" placeholder="ヤマダ ハナコ"></div>
       <div class="field"><label>氏名</label><input type="text" id="d${idx}_name" placeholder="山田 花子"></div>
+      <div class="field"><label>フリガナ</label><input type="text" id="d${idx}_kana" placeholder="ヤマダ ハナコ"></div>
     </div>
     <div class="row cols3">
       <div class="field"><label>生年月日</label><input type="date" id="d${idx}_dob"></div>
@@ -358,6 +358,19 @@ function resetForm() {
 }
 
 init();
+
+// Enterキーで次のフィールドへ移動
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  const tags = ['INPUT','SELECT'];
+  if (!tags.includes(document.activeElement.tagName)) return;
+  const focusable = Array.from(document.querySelectorAll('input:not([type=hidden]), select'));
+  const i = focusable.indexOf(document.activeElement);
+  if (i !== -1 && i < focusable.length - 1) {
+    e.preventDefault();
+    focusable[i + 1].focus();
+  }
+});
 </script>
 </body>
 </html>
