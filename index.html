@@ -117,38 +117,38 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   <div class="section-label">本人情報</div>
   <div class="row cols2">
     <div class="field">
-      <label>フリガナ<span class="req">*</span></label>
-      <input type="text" id="kana" placeholder="ヤマダ タロウ">
-    </div>
-    <div class="field">
       <label>氏名<span class="req">*</span></label>
       <input type="text" id="name" placeholder="山田 太郎">
+    </div>
+    <div class="field">
+      <label>フリガナ<span class="req">*</span></label>
+      <input type="text" id="kana" placeholder="ヤマダ タロウ">
     </div>
   </div>
   <div class="row cols3">
     <div class="field">
-      <label>生年月日</label>
+      <label>生年月日<span class="req">*</span></label>
       <input type="date" id="dob">
     </div>
     <div class="field">
-      <label>性別</label>
+      <label>性別<span class="req">*</span></label>
       <select id="gender">
         <option value="">選択してください</option>
         <option>男</option><option>女</option><option>その他</option>
       </select>
     </div>
     <div class="field">
-      <label>電話番号</label>
+      <label>電話番号<span class="req">*</span></label>
       <input type="tel" id="tel" placeholder="090-0000-0000">
     </div>
   </div>
   <div class="row cols2">
     <div class="field">
-      <label>郵便番号</label>
+      <label>郵便番号<span class="req">*</span></label>
       <input type="text" id="zip" placeholder="000-0000">
     </div>
     <div class="field">
-      <label>住所</label>
+      <label>住所<span class="req">*</span></label>
       <input type="text" id="addr" placeholder="北海道札幌市○○区○○町 1-2-3">
     </div>
   </div>
@@ -156,23 +156,29 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   <div class="section-label">番号・保険</div>
   <div class="row cols2">
     <div class="field">
-      <label>マイナンバー</label>
+      <label>マイナンバー<span class="req">*</span></label>
       <input type="text" id="mynum" placeholder="0000 0000 0000">
       <span class="hint">厳重に管理します</span>
     </div>
     <div class="field">
-      <label>基礎年金番号</label>
+      <label>基礎年金番号<span class="req">*</span></label>
       <input type="text" id="pension" placeholder="0000 000000">
     </div>
   </div>
   <div class="row cols2">
     <div class="field">
-      <label>雇用保険被保険者番号</label>
-      <input type="text" id="employ_ins" placeholder="0000 000000 0">
+      <label>雇用保険被保険者番号<span class="req">*</span></label>
+      <select id="employ_ins_type" onchange="toggleEmployIns(this.value)">
+        <option value="">選択してください</option>
+        <option value="あり">あり（番号を入力）</option>
+        <option value="なし">加入歴なし</option>
+      </select>
+      <input type="text" id="employ_ins" placeholder="0000 000000 0" style="margin-top:6px;display:none">
     </div>
     <div class="field">
-      <label>被扶養者</label>
+      <label>被扶養者<span class="req">*</span></label>
       <select id="has_dep" onchange="toggleDep(this.value)">
+        <option value="">選択してください</option>
         <option value="無">無</option>
         <option value="有">有</option>
       </select>
@@ -222,6 +228,12 @@ function resetUrl() {
   localStorage.removeItem(GAS_KEY);
   document.getElementById('gas-url-input').value = '';
   init();
+}
+
+function toggleEmployIns(val) {
+  const input = document.getElementById('employ_ins');
+  input.style.display = val === 'あり' ? 'block' : 'none';
+  if (val !== 'あり') input.value = '';
 }
 
 function toggleDep(val) {
@@ -289,12 +301,25 @@ function v(id) { return (document.getElementById(id) || {}).value?.trim() || '';
 async function submitForm() {
   const gasUrl = localStorage.getItem(GAS_KEY);
   if (!gasUrl) { showStatus('⚙️ 管理者がまだURLを設定していません。担当者にお問い合わせください。', 'err'); return; }
-  if (!v('name') || !v('kana')) { showStatus('氏名・フリガナは必須です', 'err'); return; }
+
+  const required = [
+    ['name','氏名'],['kana','フリガナ'],['dob','生年月日'],['gender','性別'],
+    ['tel','電話番号'],['zip','郵便番号'],['addr','住所'],
+    ['mynum','マイナンバー'],['pension','基礎年金番号'],['has_dep','被扶養者']
+  ];
+  for (const [id, label] of required) {
+    if (!v(id)) { showStatus(`「${label}」は必須項目です`, 'err'); document.getElementById(id).focus(); return; }
+  }
+  const eit = v('employ_ins_type');
+  if (!eit) { showStatus('「雇用保険被保険者番号」は必須項目です', 'err'); document.getElementById('employ_ins_type').focus(); return; }
+  if (eit === 'あり' && !v('employ_ins')) { showStatus('雇用保険被保険者番号を入力してください', 'err'); document.getElementById('employ_ins').focus(); return; }
+
+  const employ_ins_val = eit === 'なし' ? '加入歴なし' : v('employ_ins');
 
   const payload = {
     name:v('name'), kana:v('kana'), dob:v('dob'), gender:v('gender'),
     tel:v('tel'), zip:v('zip'), addr:v('addr'), mynum:v('mynum'),
-    pension:v('pension'), employ_ins:v('employ_ins'), has_dep:v('has_dep'),
+    pension:v('pension'), employ_ins:employ_ins_val, has_dep:v('has_dep'),
     deps:getDeps()
   };
 
@@ -323,7 +348,8 @@ function resetForm() {
     const el = document.getElementById(id); if(el) el.value = '';
   });
   document.getElementById('dob').value = '';
-  ['gender'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['gender','employ_ins_type','has_dep'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('employ_ins').style.display = 'none';
   document.getElementById('has_dep').value = '無';
   document.getElementById('dep-section').classList.remove('open');
   document.getElementById('deps-container').innerHTML = '';
