@@ -88,6 +88,22 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .status.err{background:#fce8e8;color:var(--danger);border:1px solid #f0b0b0}
 
 .form-footer{margin-top:32px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);line-height:1.8}
+
+/* 銀行サジェスト */
+.suggest-wrap{position:relative}
+.suggest-list{
+  position:absolute;top:100%;left:0;right:0;z-index:200;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:0 0 7px 7px;box-shadow:0 4px 12px rgba(0,0,0,.1);
+  max-height:200px;overflow-y:auto;display:none;
+}
+.suggest-list.show{display:block}
+.suggest-item{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.suggest-item:hover,.suggest-item.active{background:var(--accent-light)}
+.suggest-item-name{color:var(--text);font-weight:500}
+.suggest-item-code{color:var(--muted);font-size:11px;font-family:'JetBrains Mono',monospace;background:var(--bg);padding:2px 6px;border-radius:4px}
+.bank-code-badge{font-size:11px;color:var(--muted);margin-top:3px}
+.bank-code-badge span{font-weight:600;color:var(--accent)}
 </style>
 </head>
 <body>
@@ -195,6 +211,49 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     <button class="btn-add" onclick="addDep()">
       <span style="font-size:20px;line-height:1">＋</span> 扶養家族を追加する
     </button>
+  </div>
+
+  <div class="section-label">給与振込口座</div>
+  <div class="row cols2">
+    <div class="field">
+      <label>金融機関名<span class="req">*</span></label>
+      <div class="suggest-wrap">
+        <input type="text" id="bank_name" placeholder="例：みずほ、北洋、ゆうちょ" autocomplete="off" oninput="searchBank(this.value)" onblur="hideSuggest('bank-suggest',300)" onfocus="searchBank(this.value)">
+        <div class="suggest-list" id="bank-suggest"></div>
+      </div>
+      <div class="bank-code-badge" id="bank_code_badge" style="display:none">金融機関コード：<span id="bank_code_display"></span></div>
+      <input type="hidden" id="bank_code">
+    </div>
+    <div class="field">
+      <label>支店名<span class="req">*</span></label>
+      <div class="suggest-wrap">
+        <input type="text" id="bank_branch" placeholder="例：札幌、本店、東京" autocomplete="off" oninput="searchBranch(this.value)" onblur="hideSuggest('branch-suggest',300)" onfocus="searchBranch(this.value)">
+        <div class="suggest-list" id="branch-suggest"></div>
+      </div>
+      <div class="bank-code-badge" id="branch_code_badge" style="display:none">支店コード：<span id="branch_code_display"></span></div>
+      <input type="hidden" id="branch_code">
+    </div>
+  </div>
+  <div class="row cols2">
+    <div class="field">
+      <label>預金種目<span class="req">*</span></label>
+      <select id="bank_type">
+        <option value="">選択してください</option>
+        <option value="普通">普通</option>
+        <option value="当座">当座</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>口座番号<span class="req">*</span></label>
+      <input type="text" id="bank_number" placeholder="0000000">
+    </div>
+  </div>
+  <div class="row cols2">
+    <div class="field">
+      <label>口座名義（フリガナ）<span class="req">*</span></label>
+      <input type="text" id="bank_holder" placeholder="ヤマダ タロウ">
+    </div>
+    <div class="field"></div>
   </div>
 
   <div class="submit-wrap">
@@ -305,7 +364,9 @@ async function submitForm() {
   const required = [
     ['name','氏名'],['kana','フリガナ'],['dob','生年月日'],['gender','性別'],
     ['tel','電話番号'],['zip','郵便番号'],['addr','住所'],
-    ['mynum','マイナンバー'],['pension','基礎年金番号'],['has_dep','被扶養者']
+    ['mynum','マイナンバー'],['pension','基礎年金番号'],['has_dep','被扶養者'],
+    ['bank_name','金融機関名'],['bank_branch','支店名'],['bank_type','預金種目'],
+    ['bank_number','口座番号'],['bank_holder','口座名義']
   ];
   for (const [id, label] of required) {
     if (!v(id)) { showStatus(`「${label}」は必須項目です`, 'err'); document.getElementById(id).focus(); return; }
@@ -320,6 +381,10 @@ async function submitForm() {
     name:v('name'), kana:v('kana'), dob:v('dob'), gender:v('gender'),
     tel:v('tel'), zip:v('zip'), addr:v('addr'), mynum:v('mynum'),
     pension:v('pension'), employ_ins:employ_ins_val, has_dep:v('has_dep'),
+    bank_name:v('bank_name'), bank_code:v('bank_code'),
+    bank_branch:v('bank_branch'), branch_code:v('branch_code'),
+    bank_type:v('bank_type'),
+    bank_number:v('bank_number'), bank_holder:v('bank_holder'),
     deps:getDeps()
   };
 
@@ -344,11 +409,15 @@ function showStatus(msg, type) {
 }
 
 function resetForm() {
-  ['kana','name','tel','zip','addr','mynum','pension','employ_ins'].forEach(id => {
+  ['kana','name','tel','zip','addr','mynum','pension','employ_ins',
+   'bank_name','bank_code','bank_branch','branch_code','bank_number','bank_holder'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
+  document.getElementById('bank_code_badge').style.display = 'none';
+  document.getElementById('branch_code_badge').style.display = 'none';
+  selectedBankCode = '';
   document.getElementById('dob').value = '';
-  ['gender','employ_ins_type','has_dep'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['gender','employ_ins_type','has_dep','bank_type'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.getElementById('employ_ins').style.display = 'none';
   document.getElementById('has_dep').value = '無';
   document.getElementById('dep-section').classList.remove('open');
@@ -358,6 +427,90 @@ function resetForm() {
 }
 
 init();
+
+// ── 銀行オートコンプリート（銀行くんAPI） ──
+let bankSearchTimer = null;
+let branchSearchTimer = null;
+let selectedBankCode = '';
+
+function hideSuggest(id, delay) {
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
+  }, delay);
+}
+
+async function searchBank(q) {
+  clearTimeout(bankSearchTimer);
+  const list = document.getElementById('bank-suggest');
+  if (!q || q.length < 1) { list.classList.remove('show'); return; }
+  bankSearchTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://bank.teraren.com/banks.json?name=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      renderBankSuggest(data.slice(0, 8));
+    } catch(e) { list.classList.remove('show'); }
+  }, 250);
+}
+
+function renderBankSuggest(banks) {
+  const list = document.getElementById('bank-suggest');
+  if (!banks.length) { list.classList.remove('show'); return; }
+  list.innerHTML = banks.map(b =>
+    `<div class="suggest-item" onmousedown="selectBank('${b.code}','${b.name.replace(/'/g,"\\'")}')">
+      <span class="suggest-item-name">${b.name}</span>
+      <span class="suggest-item-code">${b.code}</span>
+    </div>`
+  ).join('');
+  list.classList.add('show');
+}
+
+function selectBank(code, name) {
+  selectedBankCode = code;
+  document.getElementById('bank_name').value = name;
+  document.getElementById('bank_code').value = code;
+  document.getElementById('bank_code_display').textContent = code;
+  document.getElementById('bank_code_badge').style.display = 'block';
+  document.getElementById('bank-suggest').classList.remove('show');
+  // 支店リセット
+  document.getElementById('bank_branch').value = '';
+  document.getElementById('branch_code').value = '';
+  document.getElementById('branch_code_badge').style.display = 'none';
+}
+
+async function searchBranch(q) {
+  clearTimeout(branchSearchTimer);
+  const list = document.getElementById('branch-suggest');
+  if (!selectedBankCode) { list.classList.remove('show'); return; }
+  if (!q || q.length < 1) { list.classList.remove('show'); return; }
+  branchSearchTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://bank.teraren.com/banks/${selectedBankCode}/branches.json?name=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      renderBranchSuggest(data.slice(0, 8));
+    } catch(e) { list.classList.remove('show'); }
+  }, 250);
+}
+
+function renderBranchSuggest(branches) {
+  const list = document.getElementById('branch-suggest');
+  if (!branches.length) { list.classList.remove('show'); return; }
+  list.innerHTML = branches.map(b =>
+    `<div class="suggest-item" onmousedown="selectBranch('${b.code}','${b.name.replace(/'/g,"\\'")}')">
+      <span class="suggest-item-name">${b.name}</span>
+      <span class="suggest-item-code">${b.code}</span>
+    </div>`
+  ).join('');
+  list.classList.add('show');
+}
+
+function selectBranch(code, name) {
+  document.getElementById('bank_branch').value = name;
+  document.getElementById('branch_code').value = code;
+  document.getElementById('branch_code_display').textContent = code;
+  document.getElementById('branch_code_badge').style.display = 'block';
+  document.getElementById('branch-suggest').classList.remove('show');
+}
 
 // Enterキーで次のフィールドへ移動
 document.addEventListener('keydown', function(e) {
