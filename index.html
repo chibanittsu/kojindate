@@ -178,7 +178,12 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     </div>
     <div class="field">
       <label>基礎年金番号<span class="req">*</span></label>
-      <input type="text" id="pension" placeholder="0000 000000">
+      <select id="pension_type" onchange="togglePension(this.value)">
+        <option value="">選択してください</option>
+        <option value="あり">あり（番号を入力）</option>
+        <option value="なし">加入歴なし</option>
+      </select>
+      <input type="text" id="pension" placeholder="0000 000000" style="margin-top:6px;display:none">
     </div>
   </div>
   <div class="row cols2">
@@ -289,6 +294,12 @@ function resetUrl() {
   init();
 }
 
+function togglePension(val) {
+  const input = document.getElementById('pension');
+  input.style.display = val === 'あり' ? 'block' : 'none';
+  if (val !== 'あり') input.value = '';
+}
+
 function toggleEmployIns(val) {
   const input = document.getElementById('employ_ins');
   input.style.display = val === 'あり' ? 'block' : 'none';
@@ -364,13 +375,17 @@ async function submitForm() {
   const required = [
     ['name','氏名'],['kana','フリガナ'],['dob','生年月日'],['gender','性別'],
     ['tel','電話番号'],['zip','郵便番号'],['addr','住所'],
-    ['mynum','マイナンバー'],['pension','基礎年金番号'],['has_dep','被扶養者'],
+    ['mynum','マイナンバー'],['has_dep','被扶養者'],
     ['bank_name','金融機関名'],['bank_branch','支店名'],['bank_type','預金種目'],
     ['bank_number','口座番号'],['bank_holder','口座名義']
   ];
   for (const [id, label] of required) {
     if (!v(id)) { showStatus(`「${label}」は必須項目です`, 'err'); document.getElementById(id).focus(); return; }
   }
+  const pt = v('pension_type');
+  if (!pt) { showStatus('「基礎年金番号」は必須項目です', 'err'); document.getElementById('pension_type').focus(); return; }
+  if (pt === 'あり' && !v('pension')) { showStatus('基礎年金番号を入力してください', 'err'); document.getElementById('pension').focus(); return; }
+  const pension_val = pt === 'なし' ? '加入歴なし' : v('pension');
   const eit = v('employ_ins_type');
   if (!eit) { showStatus('「雇用保険被保険者番号」は必須項目です', 'err'); document.getElementById('employ_ins_type').focus(); return; }
   if (eit === 'あり' && !v('employ_ins')) { showStatus('雇用保険被保険者番号を入力してください', 'err'); document.getElementById('employ_ins').focus(); return; }
@@ -380,7 +395,7 @@ async function submitForm() {
   const payload = {
     name:v('name'), kana:v('kana'), dob:v('dob'), gender:v('gender'),
     tel:v('tel'), zip:v('zip'), addr:v('addr'), mynum:v('mynum'),
-    pension:v('pension'), employ_ins:employ_ins_val, has_dep:v('has_dep'),
+    pension:pension_val, employ_ins:employ_ins_val, has_dep:v('has_dep'),
     bank_name:v('bank_name'), bank_code:v('bank_code'),
     bank_branch:v('bank_branch'), branch_code:v('branch_code'),
     bank_type:v('bank_type'),
@@ -417,7 +432,8 @@ function resetForm() {
   document.getElementById('branch_code_badge').style.display = 'none';
   selectedBankCode = '';
   document.getElementById('dob').value = '';
-  ['gender','employ_ins_type','has_dep','bank_type'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  ['gender','pension_type','employ_ins_type','has_dep','bank_type'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('pension').style.display = 'none';
   document.getElementById('employ_ins').style.display = 'none';
   document.getElementById('has_dep').value = '無';
   document.getElementById('dep-section').classList.remove('open');
