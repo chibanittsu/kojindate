@@ -453,8 +453,16 @@ let allBanks = null;
 async function getAllBanks() {
   if (allBanks) return allBanks;
   try {
-    const res = await fetch('https://bank.teraren.com/banks.json');
-    allBanks = await res.json();
+    allBanks = [];
+    let page = 1;
+    while (true) {
+      const res = await fetch(`https://bank.teraren.com/banks.json?page=${page}&per=200`);
+      const data = await res.json();
+      if (!data.length) break;
+      allBanks = allBanks.concat(data);
+      if (data.length < 200) break;
+      page++;
+    }
   } catch(e) { allBanks = []; }
   return allBanks;
 }
