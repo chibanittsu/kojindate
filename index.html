@@ -20,18 +20,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .site-header h1{font-size:16px;font-weight:600;letter-spacing:.02em}
 .site-header p{font-size:11px;opacity:.7;margin-top:2px}
 
-.setup-banner{background:#fff8e6;border-bottom:2px solid #e8c44a;padding:14px 24px}
-.setup-banner.hidden{display:none}
-.setup-banner-text{font-size:13px;color:#5a4400;margin-bottom:8px}
-.setup-banner-text strong{display:block;margin-bottom:2px}
-.setup-input-row{display:flex;gap:8px;align-items:center}
-.setup-input-row input{flex:1;font-family:'Noto Sans JP',sans-serif;font-size:13px;border:1.5px solid #e8c44a;border-radius:6px;padding:8px 10px;background:#fff;color:var(--text);outline:none}
-.setup-input-row input:focus{border-color:var(--accent)}
-.setup-save-btn{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans JP',sans-serif;white-space:nowrap}
-.setup-save-btn:hover{opacity:.88}
-.setup-ok{background:var(--success-bg);border-bottom:1px solid #a8d8b8;padding:10px 24px;font-size:13px;color:var(--success);display:flex;align-items:center;gap:8px}
-.setup-ok.hidden{display:none}
-.setup-ok button{margin-left:auto;background:none;border:1px solid #a8d8b8;border-radius:4px;padding:2px 10px;font-size:11px;color:var(--success);cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+
 
 .container{max-width:720px;margin:0 auto;padding:28px 16px}
 
@@ -113,20 +102,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   <p>入力内容は担当者のみが閲覧できます</p>
 </header>
 
-<div class="setup-banner" id="setup-banner">
-  <div class="setup-banner-text">
-    <strong>⚙️ 管理者設定：Google Apps Script の URL を入力してください</strong>
-    このメッセージは管理者のみに表示されます。URLを設定すると次回から表示されません。
-  </div>
-  <div class="setup-input-row">
-    <input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/XXXXX/exec">
-    <button class="setup-save-btn" onclick="saveGasUrl()">保存</button>
-  </div>
-</div>
-<div class="setup-ok hidden" id="setup-ok">
-  ✅ Google Sheets への送信が設定されています
-  <button onclick="resetUrl()">URLを変更</button>
-</div>
+
 
 <main class="container">
 
@@ -272,27 +248,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 </main>
 
 <script>
-const GAS_KEY = 'emp_gas_url_v2';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyv9uX8S3lAtsZ29ok22Ie8QWiwON27guQyfFY6Q5L0QbDmC0Q9HMEK-yKCKK99E8cWUg/exec';
 let depCount = 0;
-
-function init() {
-  const saved = localStorage.getItem(GAS_KEY);
-  document.getElementById('setup-banner').classList.toggle('hidden', !!saved);
-  document.getElementById('setup-ok').classList.toggle('hidden', !saved);
-}
-
-function saveGasUrl() {
-  const url = document.getElementById('gas-url-input').value.trim();
-  if (!url || !url.startsWith('https://')) { alert('正しいURLを入力してください'); return; }
-  localStorage.setItem(GAS_KEY, url);
-  init();
-}
-
-function resetUrl() {
-  localStorage.removeItem(GAS_KEY);
-  document.getElementById('gas-url-input').value = '';
-  init();
-}
 
 function togglePension(val) {
   const input = document.getElementById('pension');
@@ -369,8 +326,7 @@ function getDeps() {
 function v(id) { return (document.getElementById(id) || {}).value?.trim() || ''; }
 
 async function submitForm() {
-  const gasUrl = localStorage.getItem(GAS_KEY);
-  if (!gasUrl) { showStatus('⚙️ 管理者がまだURLを設定していません。担当者にお問い合わせください。', 'err'); return; }
+  const gasUrl = GAS_URL;
 
   const required = [
     ['name','氏名'],['kana','フリガナ'],['dob','生年月日'],['gender','性別'],
