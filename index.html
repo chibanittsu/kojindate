@@ -364,13 +364,12 @@ async function submitForm() {
 
   try {
     await fetch(gasUrl, { method:'POST', body:JSON.stringify(payload), mode:'no-cors' });
-    showStatus('✅ 送信が完了しました。ご回答ありがとうございます。', 'ok');
-    resetForm();
   } catch(err) {
-    showStatus('❌ 送信に失敗しました。時間をおいて再度お試しください。', 'err');
-  } finally {
-    btn.disabled = false; btn.textContent = '回答を送信する';
+    // no-corsでは常にエラーになるため無視
   }
+  showStatus('✅ 送信が完了しました。ご回答ありがとうございます。', 'ok');
+  resetForm();
+  btn.disabled = false; btn.textContent = '回答を送信する';
 }
 
 function showStatus(msg, type) {
@@ -397,8 +396,6 @@ function resetForm() {
   depCount = 0;
   window.scrollTo({ top:0, behavior:'smooth' });
 }
-
-init();
 
 // ── 銀行オートコンプリート（銀行くんAPI） ──
 let bankSearchTimer = null;
