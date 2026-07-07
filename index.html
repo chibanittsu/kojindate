@@ -37,7 +37,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .field label .req{color:var(--danger);margin-left:2px}
 .field .hint{font-size:10px;color:var(--muted);margin-top:2px}
 
-input[type=text],input[type=date],input[type=tel],select{
+input[type=text],input[type=date],input[type=tel],input[type=email],select{
   font-family:'Noto Sans JP',sans-serif;font-size:14px;
   border:1px solid var(--border);border-radius:6px;padding:9px 11px;
   background:var(--surface);color:var(--text);transition:border-color .15s;outline:none;width:100%
@@ -136,9 +136,15 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   </div>
   <div class="row cols2">
     <div class="field">
+      <label>メールアドレス<span class="req">*</span></label>
+      <input type="email" id="email" placeholder="example@email.com">
+    </div>
+    <div class="field">
       <label>郵便番号<span class="req">*</span></label>
       <input type="text" id="zip" placeholder="000-0000">
     </div>
+  </div>
+  <div class="row">
     <div class="field">
       <label>住所<span class="req">*</span></label>
       <input type="text" id="addr" placeholder="北海道札幌市○○区○○町 1-2-3">
@@ -330,7 +336,7 @@ async function submitForm() {
 
   const required = [
     ['name','氏名'],['kana','フリガナ'],['dob','生年月日'],['gender','性別'],
-    ['tel','電話番号'],['zip','郵便番号'],['addr','住所'],
+    ['tel','電話番号'],['email','メールアドレス'],['zip','郵便番号'],['addr','住所'],
     ['mynum','マイナンバー'],['has_dep','被扶養者'],
     ['bank_name','金融機関名'],['bank_branch','支店名'],['bank_type','預金種目'],
     ['bank_number','口座番号'],['bank_holder','口座名義']
@@ -350,7 +356,7 @@ async function submitForm() {
 
   const payload = {
     name:v('name'), kana:v('kana'), dob:v('dob'), gender:v('gender'),
-    tel:v('tel'), zip:v('zip'), addr:v('addr'), mynum:v('mynum'),
+    tel:v('tel'), email:v('email'), zip:v('zip'), addr:v('addr'), mynum:v('mynum'),
     pension:pension_val, employ_ins:employ_ins_val, has_dep:v('has_dep'),
     bank_name:v('bank_name'), bank_code:v('bank_code'),
     bank_branch:v('bank_branch'), branch_code:v('branch_code'),
@@ -379,7 +385,7 @@ function showStatus(msg, type) {
 }
 
 function resetForm() {
-  ['kana','name','tel','zip','addr','mynum','pension','employ_ins',
+  ['kana','name','tel','email','zip','addr','mynum','pension','employ_ins',
    'bank_name','bank_code','bank_branch','branch_code','bank_number','bank_holder'].forEach(id => {
     const el = document.getElementById(id); if(el) el.value = '';
   });
