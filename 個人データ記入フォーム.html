@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- saved from url=(0044)file:///C:/Users/user/Downloads/index_2.html -->
+<!-- saved from url=(0044)file:///C:/Users/user/Downloads/index_5.html -->
 <html lang="ja"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,15 +28,16 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .section-label:first-child{margin-top:0}
 
 .row{display:grid;gap:10px;margin-bottom:10px}
-.cols2{grid-template-columns:1fr}
-.cols3{grid-template-columns:1fr}
+.cols2{grid-template-columns:1fr 1fr}
+.cols3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:560px){.cols2,.cols3{grid-template-columns:1fr}}
 
 .field{display:flex;flex-direction:column;gap:4px}
 .field label{font-size:11px;font-weight:500;color:var(--muted)}
 .field label .req{color:var(--danger);margin-left:2px}
 .field .hint{font-size:10px;color:var(--muted);margin-top:2px}
 
-input[type=text],input[type=date],input[type=tel],select{
+input[type=text],input[type=date],input[type=tel],input[type=email],select{
   font-family:'Noto Sans JP',sans-serif;font-size:14px;
   border:1px solid var(--border);border-radius:6px;padding:9px 11px;
   background:var(--surface);color:var(--text);transition:border-color .15s;outline:none;width:100%
@@ -128,21 +129,22 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
         <option>男</option><option>女</option><option>その他</option>
       </select>
     </div>
-  <div class="row cols2">
     <div class="field">
       <label>電話番号<span class="req">*</span></label>
       <input type="tel" id="tel" placeholder="090-0000-0000">
     </div>
+  </div>
+  <div class="row cols2">
     <div class="field">
       <label>メールアドレス<span class="req">*</span></label>
       <input type="email" id="email" placeholder="example@email.com">
     </div>
-  </div>
-  <div class="row cols2">
     <div class="field">
       <label>郵便番号<span class="req">*</span></label>
       <input type="text" id="zip" placeholder="000-0000">
     </div>
+  </div>
+  <div class="row">
     <div class="field">
       <label>住所<span class="req">*</span></label>
       <input type="text" id="addr" placeholder="北海道札幌市○○区○○町 1-2-3">
@@ -249,7 +251,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
   <div class="form-footer">
     本フォームで収集した個人情報は、給与・社会保険等の各種届出にのみ使用し、適切に管理します。マイナンバーは法令に基づき厳重に取り扱います。
   </div>
-</div></main>
+</main>
 
 <script>
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyv9uX8S3lAtsZ29ok22Ie8QWiwON27guQyfFY6Q5L0QbDmC0Q9HMEK-yKCKK99E8cWUg/exec';
